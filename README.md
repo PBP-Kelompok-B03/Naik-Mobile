@@ -1,73 +1,140 @@
-Nama Anggota Kelompok:
-Bryan Christopher Kurniadi - 2406346011
-Harish Azka Firdaus - 2406435805
-Hammam Muhammad Mubarak - 2406401350
-Jessevan Gerard Vito Uisan - 2406495496
-Raymundo Rafaelito - 2406404642
 
-Deskripsi Website, Daftar Modul, dan Deskripsi Modul
-Naik /na·ik/ adalah platform digital inovatif yang bergerak di bidang penjualan peralatan olahraga secara online, hadir untuk menjadi tempat terbaik bagi para pecinta olahraga yang ingin mencari, membandingkan, dan membeli perlengkapan favorit mereka dengan mudah dan aman. Terinspirasi dari semangat olahraga dan pergerakan aktif, Naik hadir dengan berbagai fitur unggulan yang dikembangkan oleh tim kami secara kolaboratif:
-Ulasan dan Komentar - Raymundo Rafaelito
-Fitur ini memungkinkan pengguna untuk membaca dan menuliskan ulasan jujur dan komentar langsung pada produk. Dengan begitu, calon pembeli dapat mengambil keputusan yang lebih tepat berdasarkan pengalaman pengguna lain. Transparansi adalah kunci!
-Filter Produk - Harish Azka Firdaus
-Cari produk jadi makin gampang! Dengan fitur filter pintar, pengguna bisa menyaring produk berdasarkan kategori, harga, merek, hingga jenis olahraga. Mau cari raket murah atau sepatu lari premium? Semua bisa diatur sesuai kebutuhan.
-Sistem Lelang dan Keranjang - Jessevan Gerard Vito Uisan
-Fitur eksklusif ini memungkinkan pengguna untuk menawar harga barang dalam sistem lelang terbuka. Cocok untuk produk-produk edisi terbatas atau barang pre-loved berkualitas. Siapa cepat, dia dapat... atau siapa pintar, dia menang! Fitur keranjang berguna untuk menyimpan barang yang mau dibeli namun belum di check-out.
-Checkout Page - Hammam Muhammad Mubarak
-Di halaman checkout, pengguna bisa memilih: metode pembayaran (transfer, e-wallet, kartu kredit), jenis pengiriman (biasa, cepat, same day), opsi asuransi barang, catatan tambahan, dan lainnya.
-Chat Pembeli dan Penjual - Bryan Christopher Kurniadi
-Fitur chat real-time antar pengguna agar komunikasi langsung bisa terjadi, entah itu nawar, minta ukuran sepatu, atau sekadar tanya warna barangnya beneran "hitam legam" atau "abu galau".
-Naik ingin menjadi platform lokal yang mendorong gaya hidup aktif dan sehat melalui kemudahan akses terhadap produk-produk olahraga berkualitas. Dengan tampilan yang modern, fitur yang lengkap, dan semangat anak muda, Naik bukan sekadar toko, tapi gerakan.
-3. Jenis Pengguna Website
-Pembeli
-Pengguna umum yang mendaftar ke platform untuk menjelajah, mencari, dan membeli produk olahraga. Fitur & Hak Akses:
-Melihat daftar produk dan detailnya. 
-Menggunakan fitur filter produk untuk pencarian lebih mudah. 
-Memberikan ulasan dan komentar terhadap produk yang telah dibeli. 
-Mengikuti lelang (bidding) produk tertentu. 
-Melakukan pembelian langsung (buy now) atau ikut bidding. 
-Mengakses riwayat transaksi pribadi. 
-Menggunakan fitur chat untuk bertanya langsung kepada penjual. 
-Mengatur profil akun pribadi dan metode pembayaran.
-Penjual
-Akun ini diperuntukkan bagi individu atau toko yang ingin menjual produk olahraga di Naik. Fitur dan Hak Akses:
-Fitur akun pembeli + fitur penjual. 
-Mengunggah dan mengelola produk: nama, harga, stok, deskripsi, dan foto. 
-Menentukan apakah produk dijual biasa atau lewat sistem bidding/lelang. 
-Menerima dan merespon chat dari calon pembeli. 
-Melihat laporan penjualan dan pendapatan. 
-Mengatur pengiriman (opsi ekspedisi yang didukung). 
-Menjawab dan menanggapi ulasan dari pembeli. 
-Admin
-Admin adalah pihak internal Naik yang memiliki kontrol penuh atas sistem dan bertanggung jawab menjaga keamanan serta kelancaran operasional platform. Fitur dan Hak Akses:
-Akses penuh ke semua data pengguna, produk, transaksi, dan statistik sistem. 
-Menyetujui atau menolak pengajuan akun penjual baru. 
-Menghapus atau menyembunyikan produk yang melanggar aturan. 
-Melakukan moderasi ulasan, komentar, dan chat jika diperlukan. 
-Melihat dan mengelola laporan pendapatan platform secara menyeluruh. 
-Melakukan penanganan masalah teknis dan pengembalian dana bila diperlukan. 
-Melakukan pengaturan di backend (fitur, kategori, kampanye promosi, dll).
+---
 
+# Naik — Platform Penjualan Peralatan Olahraga
 
+## 1. Nama Anggota Kelompok
 
-Alur pengintegrasian dengan web service untuk terhubung dengan aplikasi web yang sudah dibuat saat Proyek Tengah Semester: 
-Persiapan Backend (Django)
-Install & Konfigurasi django-cors-header
-Melakukan pip install django-cors-header
-Menambahkan ke INSTALLED_APPS dan MIDDLEWARE di settings.py
-Izinkan semua host (CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1", "http://10.0.2.2"])
-Membuat endpoint JSON
-Setiap anggota harus membuat fungsi view baru (atau memodifikasi yang lama) di views.py masing-masing modul.
-Persiapan Frontend (Flutter)
-Install & Konfigurasi library yang diperlukan
-Membuat model data (Konversi JSON ke Dart)
-Data JSON dari Django tidak bisa langsung dipakai, harus diubah jadi objek Dart menggunakan tool online seperti QuickType untuk mengubah JSON Django menjadi file .dart.
-Alur Integrasi per Fitur
-Autentikasi (Login/Register)
-Filter Product
-Ulasan dan Komentar
-Sistem Lelang
-Checkout Page
-Chat Pembeli dan Penjual
-Link Figma : https://www.figma.com/team_invite/redeem/SqRdQdOKUpWhPSU0bTmWad 
+* **Bryan Christopher Kurniadi** – 2406346011
+* **Harish Azka Firdaus** – 2406435805
+* **Hammam Muhammad Mubarak** – 2406401350
+* **Jessevan Gerard Vito Uisan** – 2406495496
+* **Raymundo Rafaelito** – 2406404642
 
+---
+
+## 2. Deskripsi Website, Daftar Modul, dan Deskripsi Modul
+
+**Naik /na·ik/** adalah platform digital inovatif di bidang penjualan peralatan olahraga secara online. Platform ini hadir sebagai tempat terbaik bagi pecinta olahraga untuk mencari, membandingkan, dan membeli perlengkapan favorit mereka dengan mudah dan aman. Terinspirasi oleh semangat olahraga dan gaya hidup aktif, Naik menyediakan berbagai fitur unggulan yang dikembangkan secara kolaboratif oleh tim.
+
+### a. Ulasan dan Komentar – *Raymundo Rafaelito*
+
+Fitur ini memungkinkan pengguna membaca dan menulis ulasan jujur pada produk. Membantu calon pembeli mengambil keputusan berdasarkan pengalaman pengguna lain.
+
+### b. Filter Produk – *Harish Azka Firdaus*
+
+Memudahkan pengguna menyaring produk berdasarkan kategori, harga, merek, hingga jenis olahraga. Cocok untuk mencari produk terbaik sesuai kebutuhan.
+
+### c. Sistem Lelang dan Keranjang – *Jessevan Gerard Vito Uisan*
+
+Pengguna dapat menawar harga barang dalam sistem lelang terbuka, serta menyimpan produk pre-loved berkualitas dalam keranjang untuk checkout nanti.
+
+### d. Checkout Page – *Hammam Muhammad Mubarak*
+
+Pengguna dapat memilih metode pembayaran, jenis pengiriman, menambahkan catatan, hingga menggunakan opsi asuransi barang.
+
+### e. Chat Pembeli dan Penjual – *Bryan Christopher Kurniadi*
+
+Fitur chat real-time untuk komunikasi langsung antara pembeli dan penjual, seperti menawar harga atau menanyakan detail produk.
+
+Naik ingin menjadi platform lokal yang mendorong gaya hidup aktif dan sehat, dengan akses mudah terhadap produk olahraga berkualitas. Naik bukan sekadar toko, tetapi gerakan.
+
+---
+
+## 3. Jenis Pengguna Website
+
+### a. Pembeli
+
+Pengguna umum yang ingin menjelajah, mencari, dan membeli produk.
+
+**Fitur & Hak Akses:**
+
+* Melihat daftar produk dan detailnya
+* Menggunakan fitur filter produk
+* Memberikan ulasan
+* Mengikuti lelang produk
+* Membeli langsung (buy now) atau bidding
+* Melihat riwayat transaksi
+* Chat dengan penjual
+* Mengatur profil dan metode pembayaran
+
+---
+
+### b. Penjual
+
+Untuk individu atau toko yang ingin menjual produk olahraga.
+
+**Fitur & Hak Akses:**
+
+* Semua fitur pembeli
+* Mengunggah dan mengelola produk
+* Menentukan mode penjualan (normal atau bidding)
+* Menerima dan merespon chat pembeli
+* Melihat laporan penjualan
+* Mengatur pengiriman
+* Menanggapi ulasan pembeli
+
+---
+
+### c. Admin
+
+Pihak internal Naik yang mengontrol sistem dan keamanan platform.
+
+**Fitur & Hak Akses:**
+
+* Akses penuh ke data pengguna, produk, transaksi, dan statistik
+* Menyetujui atau menolak akun penjual baru
+* Menghapus atau menyembunyikan produk melanggar aturan
+* Moderasi ulasan, komentar, dan chat
+* Mengelola laporan pendapatan
+* Menangani masalah teknis dan pengembalian dana
+* Konfigurasi backend (fitur, kategori, promosi, dll)
+
+---
+
+## 4. Alur Pengintegrasian Web Service (Flutter ↔ Django)
+
+### a. Persiapan Backend (Django)
+
+1. Install dan konfigurasi `django-cors-header`
+
+   ```bash
+   pip install django-cors-headers
+   ```
+2. Tambahkan ke `INSTALLED_APPS` dan `MIDDLEWARE`
+3. Setelan pada `settings.py`:
+
+   ```python
+   CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1", "http://10.0.2.2"]
+   ```
+4. Membuat endpoint JSON
+
+   * Setiap anggota membuat atau memodifikasi view baru di `views.py` sesuai modul masing-masing
+
+---
+
+### b. Persiapan Frontend (Flutter)
+
+1. Install library yang diperlukan
+2. Membuat model data (Konversi JSON ke Dart)
+
+   * JSON dari Django harus dikonversi menjadi file `.dart` menggunakan tools seperti QuickType
+
+---
+
+### c. Alur Integrasi per Fitur
+
+1. Autentikasi (Login/Register)
+2. Filter Product
+3. Ulasan dan Komentar
+4. Sistem Lelang
+5. Checkout Page
+6. Chat Pembeli dan Penjual
+
+---
+
+## Link Figma
+
+[https://www.figma.com/team_invite/redeem/SqRdQdOKUpWhPSU0bTmWad](https://www.figma.com/team_invite/redeem/SqRdQdOKUpWhPSU0bTmWad)
+
+---
