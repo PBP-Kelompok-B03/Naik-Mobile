@@ -36,7 +36,7 @@ class ProductEntry {
         title: json["title"],
         content: json["content"],
         category: json["category"],
-        thumbnail: json["thumbnail"],
+        thumbnail: json["thumbnail"] ?? "",
         productViews: json["product_views"],
         createdAt: DateTime.parse(json["created_at"]),
         isFeatured: json["is_featured"],
