@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:naik/screens/menu.dart';
 import 'package:naik/screens/productlist_form.dart';
 import 'package:naik/screens/product_entry_list.dart';
 import 'package:naik/screens/login.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
+
+// ItemHomepage class to represent menu items
+class ItemHomepage {
+  final String name;
+  final IconData icon;
+
+  ItemHomepage(this.name, this.icon);
+}
 
 class ItemCard extends StatelessWidget {
   // Menampilkan kartu dengan ikon dan nama.

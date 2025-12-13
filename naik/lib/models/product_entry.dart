@@ -3,6 +3,7 @@
 //     final productEntry = productEntryFromJson(jsonString);
 
 import 'dart:convert';
+import 'package:naik/config/app_config.dart';
 
 List<ProductEntry> productEntryFromJson(String str) => List<ProductEntry>.from(json.decode(str).map((x) => ProductEntry.fromJson(x)));
 
@@ -11,47 +12,97 @@ String productEntryToJson(List<ProductEntry> data) => json.encode(List<dynamic>.
 class ProductEntry {
     String id;
     String title;
-    String content;
+    int price;
     String category;
     String thumbnail;
-    int productViews;
-    DateTime createdAt;
-    bool isFeatured;
+    int countSold;
+    int stock;
+    bool isAuction;
+    int? auctionIncrement;
+    DateTime? auctionEndTime;
     int? userId;
 
     ProductEntry({
         required this.id,
         required this.title,
-        required this.content,
+        required this.price,
         required this.category,
         required this.thumbnail,
-        required this.productViews,
-        required this.createdAt,
-        required this.isFeatured,
-        required this.userId,
+        required this.countSold,
+        required this.stock,
+        required this.isAuction,
+        this.auctionIncrement,
+        this.auctionEndTime,
+        this.userId,
     });
 
-    factory ProductEntry.fromJson(Map<String, dynamic> json) => ProductEntry(
-        id: json["id"],
-        title: json["title"],
-        content: json["content"],
-        category: json["category"],
-        thumbnail: json["thumbnail"],
-        productViews: json["product_views"],
-        createdAt: DateTime.parse(json["created_at"]),
-        isFeatured: json["is_featured"],
-        userId: json["user_id"],
-    );
+    factory ProductEntry.fromJson(Map<String, dynamic> json) {
+        // Django serializer wraps data in "model", "pk", and "fields"
+        var fields = json["fields"] ?? json;
+        var pk = json["pk"] ?? json["id"] ?? '';
+
+        return ProductEntry(
+            id: pk.toString(),
+            title: fields["title"] ?? '',
+            price: fields["price"] is String
+                ? int.tryParse(fields["price"]) ?? 0
+                : (fields["price"] ?? 0),
+            category: fields["category"] ?? '',
+            thumbnail: fields["thumbnail"] ?? '',
+            countSold: fields["count_sold"] ?? 0,
+            stock: fields["stock"] ?? 0,
+            isAuction: fields["is_auction"] ?? false,
+            auctionIncrement: fields["auction_increment"] is String
+                ? int.tryParse(fields["auction_increment"])
+                : fields["auction_increment"],
+            auctionEndTime: fields["auction_end_time"] != null
+                ? DateTime.tryParse(fields["auction_end_time"])
+                : null,
+            userId: fields["user"],
+        );
+    }
 
     Map<String, dynamic> toJson() => {
-        "id": id,
-        "title": title,
-        "content": content,
-        "category": category,
-        "thumbnail": thumbnail,
-        "product_views": productViews,
-        "created_at": createdAt.toIso8601String(),
-        "is_featured": isFeatured,
-        "user_id": userId,
+        "pk": id,
+        "fields": {
+            "title": title,
+            "price": price,
+            "category": category,
+            "thumbnail": thumbnail,
+            "count_sold": countSold,
+            "stock": stock,
+            "is_auction": isAuction,
+            "auction_increment": auctionIncrement,
+            "auction_end_time": auctionEndTime?.toIso8601String(),
+            "user": userId,
+        }
     };
+
+    // Helper method to get the full image URL
+    String getImageUrl() {
+        if (thumbnail.isEmpty) return '';
+
+        // If thumbnail is already a full URL, return it
+        if (thumbnail.startsWith('http://') || thumbnail.startsWith('https://')) {
+            return thumbnail;
+        }
+
+        // Remove 'image/products/temp/' prefix if it exists (from Django ImageField upload_to)
+        String cleanPath = thumbnail;
+        if (cleanPath.startsWith('image/products/temp/')) {
+            cleanPath = cleanPath.replaceFirst('image/products/temp/', 'image/products/');
+        }
+
+        // Construct the static URL (images are in static/, not media/)
+        return '${AppConfig.baseUrl}/static/$cleanPath';
+    }
+
+    // Helper method for web platform to use proxy (avoids CORS issues)
+    String getProxiedImageUrl() {
+        final staticUrl = getImageUrl();
+        if (staticUrl.isEmpty) return '';
+
+        // Use proxy endpoint to bypass CORS on web
+        return '${AppConfig.proxyImageEndpoint}?url=${Uri.encodeComponent(staticUrl)}';
+    }
 }
