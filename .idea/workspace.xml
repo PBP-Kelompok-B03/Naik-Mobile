@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="548e8b71-0b09-4dfd-b9d3-6f726233da01" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/models/checkout_response.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/models/order.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/models/order_item.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/screens/checkout_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/screens/order_list_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/screens/order_success_page.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/services/checkout_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/services/order_service.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/widgets/checkout_form.dart" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/naik/lib/checkout/widgets/order_card.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naik/lib/screens/product_detail.dart" beforeDir="false" afterPath="$PROJECT_DIR$/naik/lib/screens/product_detail.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naik/lib/widgets/left_drawer.dart" beforeDir="false" afterPath="$PROJECT_DIR$/naik/lib/widgets/left_drawer.dart" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naik/linux/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/naik/linux/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naik/linux/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/naik/linux/flutter/generated_plugins.cmake" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naik/macos/Flutter/GeneratedPluginRegistrant.swift" beforeDir="false" afterPath="$PROJECT_DIR$/naik/macos/Flutter/GeneratedPluginRegistrant.swift" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naik/windows/flutter/generated_plugin_registrant.cc" beforeDir="false" afterPath="$PROJECT_DIR$/naik/windows/flutter/generated_plugin_registrant.cc" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/naik/windows/flutter/generated_plugins.cmake" beforeDir="false" afterPath="$PROJECT_DIR$/naik/windows/flutter/generated_plugins.cmake" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 6
+}</component>
+  <component name="ProjectId" id="36hurwPZHrDKxfOadza5pyvazVN" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "dart.analysis.tool.window.visible": "false",
+    "git-widget-placeholder": "Checkout",
+    "last_opened_file_path": "C:/HM2/Assignment/PBP/flutter/Project UAS/Naik-Mobile",
+    "settings.editor.selected.configurable": "AndroidSdkUpdater"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="548e8b71-0b09-4dfd-b9d3-6f726233da01" name="Changes" comment="" />
+      <created>1765471326877</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1765471326877</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="Dart">
+          <url>file://$PROJECT_DIR$/naik/lib/screens/product_detail.dart</url>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
