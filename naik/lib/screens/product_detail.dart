@@ -6,6 +6,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:naik/config/app_config.dart';
 import 'package:naik/screens/product_entry_list.dart';
+import 'package:naik/checkout/screens/checkout_page.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final ProductEntry product;
@@ -35,38 +36,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   bool _canEditOrDelete() {
-    // Buyers cannot edit or delete
     if (_userRole == 'buyer') return false;
-
-    // Admins can edit/delete anything
     if (_userRole == 'admin') return true;
-
-    // Sellers can only edit/delete their own products
     if (_userRole == 'seller') {
       return widget.product.userId == _userId;
     }
-
     return false;
+  }
+
+  bool _canBuy() {
+    return _userRole == 'buyer' && widget.product.stock > 0;
   }
 
   String _formatDate(DateTime? date) {
     if (date == null) return 'N/A';
-    // Simple date formatter without intl package
     final months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan','Feb','Mar','Apr','May','Jun',
+      'Jul','Aug','Sep','Oct','Nov','Dec'
     ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}, ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+    return '${date.day} ${months[date.month - 1]} ${date.year}, '
+        '${date.hour.toString().padLeft(2, '0')}:'
+        '${date.minute.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -83,15 +73,17 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Thumbnail image
+
+            // ================= IMAGE =================
             if (widget.product.getImageUrl().isNotEmpty)
               Image.network(
-                // Use proxy on web to avoid CORS, direct URL on mobile
-                kIsWeb ? widget.product.getProxiedImageUrl() : widget.product.getImageUrl(),
+                kIsWeb
+                    ? widget.product.getProxiedImageUrl()
+                    : widget.product.getImageUrl(),
                 width: double.infinity,
                 height: 250,
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Container(
+                errorBuilder: (_, __, ___) => Container(
                   height: 250,
                   color: Colors.grey[300],
                   child: const Center(
@@ -101,21 +93,21 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               ),
 
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Auction badge
+
+                  // ================= AUCTION BADGE =================
                   if (widget.product.isAuction)
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 6.0,
+                        horizontal: 12, vertical: 6,
                       ),
-                      margin: const EdgeInsets.only(bottom: 12.0),
+                      margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
                         color: Colors.red,
-                        borderRadius: BorderRadius.circular(20.0),
+                        borderRadius: BorderRadius.circular(20),
                       ),
                       child: const Text(
                         'AUCTION',
@@ -127,38 +119,39 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                     ),
 
-                  // Title
+                  // ================= TITLE =================
                   Text(
                     widget.product.title,
                     style: const TextStyle(
-                      fontSize: 24.0,
+                      fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+
                   const SizedBox(height: 12),
 
-                  // Price
+                  // ================= PRICE =================
                   Text(
                     'Rp ${widget.product.price.toStringAsFixed(0)}',
                     style: const TextStyle(
-                      fontSize: 28.0,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
                     ),
                   ),
+
                   const SizedBox(height: 12),
 
-                  // Category
+                  // ================= CATEGORY =================
                   Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10.0,
-                          vertical: 4.0,
+                          horizontal: 10, vertical: 4,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.indigo.shade100,
-                          borderRadius: BorderRadius.circular(12.0),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
                           widget.product.category.toUpperCase(),
@@ -171,9 +164,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 16),
 
-                  // Stock and Sold info
+                  // ================= STOCK & SOLD =================
                   Row(
                     children: [
                       Icon(Icons.inventory_2, size: 16, color: Colors.grey[600]),
@@ -181,54 +175,47 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       Text(
                         'Stock: ${widget.product.stock}',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: widget.product.stock > 0 ? Colors.grey[600] : Colors.red,
+                          color: widget.product.stock > 0
+                              ? Colors.grey[600]
+                              : Colors.red,
                         ),
                       ),
                       const SizedBox(width: 16),
                       Icon(Icons.shopping_cart, size: 16, color: Colors.grey[600]),
                       const SizedBox(width: 4),
-                      Text(
-                        'Sold: ${widget.product.countSold}',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
+                      Text('Sold: ${widget.product.countSold}'),
                     ],
                   ),
 
-                  // Auction details
+                  // ================= AUCTION INFO =================
                   if (widget.product.isAuction) ...[
-                    const SizedBox(height: 16),
                     const Divider(height: 32),
                     const Text(
                       'Auction Details',
                       style: TextStyle(
-                        fontSize: 18.0,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
                     if (widget.product.auctionIncrement != null)
                       Text(
                         'Bid Increment: Rp ${widget.product.auctionIncrement!.toStringAsFixed(0)}',
-                        style: const TextStyle(fontSize: 14.0),
                       ),
                     if (widget.product.auctionEndTime != null)
                       Text(
                         'Auction Ends: ${_formatDate(widget.product.auctionEndTime)}',
-                        style: const TextStyle(fontSize: 14.0),
                       ),
                   ],
 
                   const SizedBox(height: 24),
 
-                  // Edit and Delete buttons (only for sellers/admins)
+                  // ================= EDIT / DELETE =================
                   if (_canEditOrDelete())
                     Row(
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
                             onPressed: () {
-                              // TODO: Implement edit functionality
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                   content: Text('Edit feature coming soon!'),
@@ -237,24 +224,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             },
                             icon: const Icon(Icons.edit),
                             label: const Text('Edit'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.indigo,
-                              side: const BorderSide(color: Colors.indigo),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () async {
-                              // Confirm delete
                               final confirm = await showDialog<bool>(
                                 context: context,
-                                builder: (context) => AlertDialog(
+                                builder: (_) => AlertDialog(
                                   title: const Text('Delete Product'),
                                   content: Text(
-                                    'Are you sure you want to delete "${widget.product.title}"?',
+                                    'Delete "${widget.product.title}"?',
                                   ),
                                   actions: [
                                     TextButton(
@@ -263,9 +244,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     ),
                                     TextButton(
                                       onPressed: () => Navigator.pop(context, true),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor: Colors.red,
-                                      ),
                                       child: const Text('Delete'),
                                     ),
                                   ],
@@ -273,44 +251,18 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                               );
 
                               if (confirm == true && context.mounted) {
-                                try {
-                                  final response = await request.post(
-                                    "${AppConfig.baseUrl}/delete-flutter/${widget.product.id}/",
-                                    {},
-                                  );
+                                final response = await request.post(
+                                  "${AppConfig.baseUrl}/delete-flutter/${widget.product.id}/",
+                                  {},
+                                );
 
-                                  if (context.mounted) {
-                                    if (response['status'] == 'success') {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(
-                                          content: Text('Product deleted successfully!'),
-                                          backgroundColor: Colors.green,
-                                        ),
-                                      );
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => const ProductEntryListPage(),
-                                        ),
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(response['message'] ?? 'Failed to delete product'),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  }
-                                } catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text('Error: $e'),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
+                                if (response['status'] == 'success') {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const ProductEntryListPage(),
+                                    ),
+                                  );
                                 }
                               }
                             },
@@ -318,15 +270,43 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             label: const Text('Delete'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.red,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
                         ),
                       ],
                     ),
 
-                  const SizedBox(height: 24),
+                  // ================= BUY NOW =================
+                  if (_canBuy()) ...[
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CheckoutPage(
+                                product: widget.product,
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        child: const Text(
+                          'BELI SEKARANG',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
