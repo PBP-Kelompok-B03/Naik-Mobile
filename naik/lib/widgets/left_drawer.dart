@@ -7,6 +7,7 @@ import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
 import 'package:naik/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:naik/checkout/screens/order_list_page.dart';
 
 class LeftDrawer extends StatefulWidget {
   const LeftDrawer({super.key});
@@ -100,6 +101,21 @@ class _LeftDrawerState extends State<LeftDrawer> {
               );
             },
           ),
+
+          _buildDrawerItem(
+            context,
+            icon: Icons.receipt_long_outlined,
+            title: 'Order List',
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const OrderListPage(),
+                ),
+              );
+            },
+          ),
+
 
           // Only show "Add Product" for sellers and admins
           if (_userRole == 'seller' || _userRole == 'admin')
