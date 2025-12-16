@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:naik/models/product_entry.dart';
 
@@ -28,17 +29,53 @@ class ProductEntryCard extends StatelessWidget {
                 // Thumbnail
                 ClipRRect(
                   borderRadius: BorderRadius.circular(6),
-                  child: Image.network(
-                    'http://localhost:8000/proxy-image/?url=${Uri.encodeComponent(product.thumbnail)}',
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 150,
-                      color: Colors.grey[300],
-                      child: const Center(child: Icon(Icons.broken_image)),
-                    ),
-                  ),
+                  child: product.getImageUrl().isNotEmpty
+                      ? Image.network(
+                          // Use proxy on web to avoid CORS, direct URL on mobile
+                          kIsWeb ? product.getProxiedImageUrl() : product.getImageUrl(),
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Container(
+                              height: 150,
+                              color: Colors.grey[300],
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  value: loadingProgress.expectedTotalBytes != null
+                                      ? loadingProgress.cumulativeBytesLoaded /
+                                        loadingProgress.expectedTotalBytes!
+                                      : null,
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            // Print error for debugging
+                            print('Image loading error for ${product.title}: $error');
+                            print('Attempted URL: ${kIsWeb ? product.getProxiedImageUrl() : product.getImageUrl()}');
+                            return Container(
+                              height: 150,
+                              color: Colors.grey[300],
+                              child: const Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.broken_image, size: 40),
+                                    SizedBox(height: 8),
+                                    Text('Image load failed', style: TextStyle(fontSize: 12)),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          height: 150,
+                          color: Colors.grey[300],
+                          child: const Center(child: Icon(Icons.image, size: 50)),
+                        ),
                 ),
                 const SizedBox(height: 8),
 
@@ -52,27 +89,44 @@ class ProductEntryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
 
+                // Price
+                Text(
+                  'Rp ${product.price.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 16.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+                const SizedBox(height: 6),
+
                 // Category
                 Text('Category: ${product.category}'),
                 const SizedBox(height: 6),
 
-                // Content preview
-                Text(
-                  product.content.length > 100
-                      ? '${product.content.substring(0, 100)}...'
-                      : product.content,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.black54),
+                // Stock info
+                Row(
+                  children: [
+                    Text(
+                      'Stock: ${product.stock}',
+                      style: TextStyle(
+                        color: product.stock > 0 ? Colors.black54 : Colors.red,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text('Sold: ${product.countSold}',
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 6),
 
-                // Featured indicator
-                if (product.isFeatured)
+                // Auction indicator
+                if (product.isAuction)
                   const Text(
-                    'Featured',
+                    'AUCTION',
                     style: TextStyle(
-                      color: Colors.amber,
+                      color: Colors.red,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

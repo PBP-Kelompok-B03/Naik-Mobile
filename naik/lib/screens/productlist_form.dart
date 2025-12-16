@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:naik/widgets/left_drawer.dart';
 import 'dart:convert';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:naik/screens/menu.dart';
+import 'package:naik/config/app_config.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ProductFormPage extends StatefulWidget {
   const ProductFormPage({super.key});
@@ -16,205 +20,437 @@ class _ProductFormPageState extends State<ProductFormPage> {
   final _formKey = GlobalKey<FormState>();
 
   String _title = "";
-  String _content = "";
-  String _category = "update";
-  String _thumbnail = "";
-  bool _isFeatured = false;
+  int _price = 0;
+  String _category = "Men's Shoes";
+  int _stock = 1;
+  bool _isLoading = false;
+  XFile? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> _categories = [
-    'transfer',
-    'update',
-    'exclusive',
-    'match',
-    'rumor',
-    'analysis',
+    "Men's Shoes",
+    "Women's Shoes",
+    "Kids' Shoes",
+    "Golf Shoes",
   ];
 
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
+
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: const Center(child: Text('Add Product Form')),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
-      drawer: const LeftDrawer(),
-      body: Form(
-        key: _formKey,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // === Title Input Field ===
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    hintText: "Judul Berita",
-                    labelText: "Judul Berita",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5.0),
-                    ),
-                  ),
-                  onChanged: (String value) {
-                    setState(() {
-                      _title = value;
-                    });
-                  },
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return "Judul tidak boleh kosong!";
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              // === Content ===
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  maxLines: 5,
-                  decoration: InputDecoration(
-                    hintText: "Isi Berita",
-                    labelText: "Isi Berita",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5.0),
-                    ),
-                  ),
-                  onChanged: (String? value) {
-                    setState(() {
-                      _content = value!;
-                    });
-                  },
-                  validator: (String? value) {
-                    if (value == null || value.isEmpty) {
-                      return "Isi berita tidak boleh kosong!";
-                    }
-                    return null;
-                  },
-                ),
-              ),
-
-              // === Category ===
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: "Kategori",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5.0),
-                    ),
-                  ),
-                  value: _category,
-                  items: _categories
-                      .map(
-                        (cat) => DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat[0].toUpperCase() + cat.substring(1)),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _category = newValue!;
-                    });
-                  },
-                ),
-              ),
-
-              // === Thumbnail URL ===
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextFormField(
-                  decoration: InputDecoration(
-                    hintText: "URL Thumbnail (opsional)",
-                    labelText: "URL Thumbnail",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(5.0),
-                    ),
-                  ),
-                  onChanged: (String? value) {
-                    setState(() {
-                      _thumbnail = value!;
-                    });
-                  },
-                ),
-              ),
-
-              // === Is Featured ===
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: SwitchListTile(
-                  title: const Text("Tandai sebagai Berita Unggulan"),
-                  value: _isFeatured,
-                  onChanged: (bool value) {
-                    setState(() {
-                      _isFeatured = value;
-                    });
-                  },
-                ),
-              ),
-              // === Tombol Simpan ===
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.indigo),
-                    ),
-                    onPressed: () async {
-                      if (_formKey.currentState!.validate()) {
-                        // TODO: Replace the URL with your app's URL
-                        // To connect Android emulator with Django on localhost, use URL http://10.0.2.2/
-                        // If you using chrome,  use URL http://localhost:8000
-
-                        final response = await request.postJson(
-                          "http://127.0.0.1:8000/create-flutter/",
-                          jsonEncode({
-                            "title": _title,
-                            "content": _content,
-                            "thumbnail": _thumbnail,
-                            "category": _category,
-                            "is_featured": _isFeatured,
-                          }),
-                        );
-                        if (context.mounted) {
-                          if (response['status'] == 'success') {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Product successfully saved!"),
-                              ),
-                            );
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => MyHomePage(),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  "Something went wrong, please try again.",
-                                ),
-                              ),
-                            );
-                          }
-                        }
-                      }
-                    },
-                    child: const Text(
-                      "Save",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+        title: const Text(
+          'Create Product',
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
           ),
         ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.black),
+      ),
+      drawer: const LeftDrawer(),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 800),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                border: Border.all(color: Colors.grey[200]!),
+              ),
+              padding: const EdgeInsets.all(40),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    const Text(
+                      'CREATE PRODUCT',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.5,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Share your new drop with the Naik community',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Product Name
+                    _buildLabel('PRODUCT NAME'),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      decoration: _buildInputDecoration('Enter product name'),
+                      onChanged: (String value) {
+                        setState(() {
+                          _title = value;
+                        });
+                      },
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return "Product name cannot be empty!";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Price
+                    _buildLabel('PRICE (IDR)'),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      decoration: _buildInputDecoration('Enter price'),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      onChanged: (String value) {
+                        setState(() {
+                          _price = int.tryParse(value) ?? 0;
+                        });
+                      },
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return "Price cannot be empty!";
+                        }
+                        if (int.tryParse(value) == null || int.parse(value) <= 0) {
+                          return "Price must be a valid positive number!";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Category
+                    _buildLabel('CATEGORY'),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      decoration: _buildInputDecoration('Select category'),
+                      initialValue: _category,
+                      items: _categories
+                          .map(
+                            (cat) => DropdownMenuItem(
+                              value: cat,
+                              child: Text(cat),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _category = newValue!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Stock
+                    _buildLabel('STOCK'),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      decoration: _buildInputDecoration('Enter stock quantity'),
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      initialValue: '1',
+                      onChanged: (String value) {
+                        setState(() {
+                          _stock = int.tryParse(value) ?? 1;
+                        });
+                      },
+                      validator: (String? value) {
+                        if (value == null || value.isEmpty) {
+                          return "Stock cannot be empty!";
+                        }
+                        if (int.tryParse(value) == null || int.parse(value) < 0) {
+                          return "Stock must be a valid number!";
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Image Upload
+                    _buildLabel('PRODUCT IMAGE (OPTIONAL)'),
+                    const SizedBox(height: 8),
+                    GestureDetector(
+                      onTap: () async {
+                        final XFile? image = await _picker.pickImage(
+                          source: ImageSource.gallery,
+                          maxWidth: 1024,
+                          maxHeight: 1024,
+                          imageQuality: 85,
+                        );
+                        if (image != null) {
+                          setState(() {
+                            _imageFile = image;
+                          });
+                        }
+                      },
+                      child: Container(
+                        height: 200,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey[300]!, width: 2),
+                          borderRadius: BorderRadius.circular(8),
+                          color: Colors.grey[50],
+                        ),
+                        child: _imageFile == null
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.add_photo_alternate,
+                                      size: 48,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Tap to select image',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(6),
+                                    child: Image.file(
+                                      File(_imageFile!.path),
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 8,
+                                    right: 8,
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.black.withValues(alpha: 0.7),
+                                      child: IconButton(
+                                        icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                                        onPressed: () {
+                                          setState(() {
+                                            _imageFile = null;
+                                          });
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+
+                    // Divider
+                    Divider(color: Colors.grey[300], thickness: 1),
+                    const SizedBox(height: 32),
+
+                    // Buttons
+                    Row(
+                      children: [
+                        // Cancel Button
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () {
+                                    Navigator.pop(context);
+                                  },
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              side: BorderSide(color: Colors.grey[300]!),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Text(
+                              'Cancel',
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+
+                        // Publish Button
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () async {
+                                    if (_formKey.currentState!.validate()) {
+                                      setState(() => _isLoading = true);
+
+                                      try {
+                                        final response = await request.postJson(
+                                          "${AppConfig.baseUrl}/create-flutter/",
+                                          jsonEncode({
+                                            "title": _title,
+                                            "price": _price,
+                                            "category": _category,
+                                            "stock": _stock,
+                                          }),
+                                        );
+
+                                        if (context.mounted) {
+                                          if (response['status'] == 'success') {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text("Product successfully created!"),
+                                                backgroundColor: Colors.black,
+                                              ),
+                                            );
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) => const MyHomePage(),
+                                              ),
+                                            );
+                                          } else {
+                                            showDialog(
+                                              context: context,
+                                              builder: (context) => AlertDialog(
+                                                title: const Text(
+                                                  'Error',
+                                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                                ),
+                                                content: Text(
+                                                  response['message'] ??
+                                                  'Something went wrong, please try again.',
+                                                ),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius: BorderRadius.circular(12),
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(context),
+                                                    style: TextButton.styleFrom(
+                                                      foregroundColor: Colors.black,
+                                                    ),
+                                                    child: const Text('OK'),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      } finally {
+                                        if (mounted) {
+                                          setState(() => _isLoading = false);
+                                        }
+                                      }
+                                    }
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              foregroundColor: Colors.white,
+                              disabledBackgroundColor: Colors.grey[400],
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Text(
+                                    'Publish Product',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLabel(String text) {
+    return Text(
+      text,
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        color: Colors.grey[700],
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: Colors.grey[400]),
+      filled: true,
+      fillColor: Colors.white,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: BorderSide(color: Colors.grey[300]!),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.black, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.red, width: 1),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(8),
+        borderSide: const BorderSide(color: Colors.red, width: 1.5),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
       ),
     );
   }
