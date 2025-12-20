@@ -68,16 +68,16 @@ class _LoginPageState extends State<LoginPage> {
                   const SizedBox(height: 8),
                   RichText(
                     textAlign: TextAlign.center,
-                    text: TextSpan(
-                      style: const TextStyle(
+                    text: const TextSpan(
+                      style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey,
                       ),
                       children: [
-                        const TextSpan(text: 'Welcome back to '),
+                        TextSpan(text: 'Welcome back to '),
                         TextSpan(
                           text: 'Naik',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
                             color: Colors.black,
                           ),
@@ -149,105 +149,136 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: _isLoading
                         ? null
                         : () async {
-                            setState(() => _isLoading = true);
+                      setState(() => _isLoading = true);
 
-                            String username = _usernameController.text;
-                            String password = _passwordController.text;
+                      String username = _usernameController.text;
+                      String password = _passwordController.text;
 
-                            try {
-                              // Hardcoded admin account
-                              if (username == 'admin' && password == 'admin') {
-                                // Save admin credentials
-                                final prefs = await SharedPreferences.getInstance();
-                                await prefs.setString('username', 'admin');
-                                await prefs.setString('role', 'admin');
-                                await prefs.setInt('user_id', -1);
+                      try {
+                        // Hardcoded admin account
+                        if (username == 'admin' && password == 'admin') {
 
-                                if (context.mounted) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const MyHomePage(),
-                                    ),
-                                  );
-                                  ScaffoldMessenger.of(context)
-                                    ..hideCurrentSnackBar()
-                                    ..showSnackBar(
-                                      const SnackBar(
-                                        content: Text("Welcome, Admin!"),
-                                        backgroundColor: Colors.black,
-                                      ),
-                                    );
-                                }
-                                return;
-                              }
+                          // **MODIFIKASI KRUSIAL:** Lakukan login ke Django API untuk mendapatkan cookie sesi
+                          final adminLoginResponse = await request.login(
+                            "${AppConfig.baseUrl}/auth/login/",
+                            {'username': 'admin', 'password': 'admin'},
+                          );
 
-                              // Regular login via API
-                              final response = await request.login(
-                                "${AppConfig.baseUrl}/auth/login/",
-                                {'username': username, 'password': password},
+                          // Periksa apakah login Django berhasil
+                          if (request.loggedIn) {
+                            // Save admin credentials
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setString('username', 'admin');
+                            await prefs.setString('role', 'admin');
+                            // Gunakan user_id asli jika ada, jika tidak, gunakan -1
+                            int userId = adminLoginResponse['user_id'] ?? -1;
+                            await prefs.setInt('user_id', userId);
+
+                            if (context.mounted) {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const MyHomePage(),
+                                ),
                               );
-
-                              if (request.loggedIn) {
-                                String message = response['message'];
-                                String uname = response['username'];
-                                String role = response['role'] ?? 'buyer';
-                                int userId = response['user_id'] ?? 0;
-
-                                // Save user credentials
-                                final prefs = await SharedPreferences.getInstance();
-                                await prefs.setString('username', uname);
-                                await prefs.setString('role', role);
-                                await prefs.setInt('user_id', userId);
-
-                                if (context.mounted) {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => const MyHomePage(),
-                                    ),
-                                  );
-                                  ScaffoldMessenger.of(context)
-                                    ..hideCurrentSnackBar()
-                                    ..showSnackBar(
-                                      SnackBar(
-                                        content: Text("$message Welcome, $uname."),
-                                        backgroundColor: Colors.black,
-                                      ),
-                                    );
-                                }
-                              } else {
-                                if (context.mounted) {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text(
-                                        'Login Failed',
-                                        style: TextStyle(fontWeight: FontWeight.bold),
-                                      ),
-                                      content: Text(response['message']),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(context),
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.black,
-                                          ),
-                                          child: const Text('OK'),
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                }
-                              }
-                            } finally {
-                              if (mounted) {
-                                setState(() => _isLoading = false);
-                              }
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Welcome, Admin!"),
+                                    backgroundColor: Colors.black,
+                                  ),
+                                );
                             }
-                          },
+                            return; // Keluar dari fungsi setelah login admin
+                          } else {
+                            // Login admin hardcoded gagal karena Django API menolak
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context)
+                                ..hideCurrentSnackBar()
+                                ..showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Login Admin gagal di server. Pastikan akun terdaftar di Django."),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                            }
+                            return;
+                          }
+                        }
+
+                        // Regular login via API
+                        final response = await request.login(
+                          "${AppConfig.baseUrl}/auth/login/",
+                          {'username': username, 'password': password},
+                        );
+
+                        if (request.loggedIn) {
+                          String message = response['message'];
+                          String uname = response['username'];
+                          String role = response['role'] ?? 'buyer';
+                          int userId = response['user_id'] ?? 0;
+
+                          // Save user credentials
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('username', uname);
+                          await prefs.setString('role', role);
+                          await prefs.setInt('user_id', userId);
+
+                          if (context.mounted) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const MyHomePage(),
+                              ),
+                            );
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(
+                                SnackBar(
+                                  content: Text("$message Welcome, $uname."),
+                                  backgroundColor: Colors.black,
+                                ),
+                              );
+                          }
+                        } else {
+                          if (context.mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text(
+                                  'Login Failed',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                content: Text(response['message']),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: Colors.black,
+                                    ),
+                                    child: const Text('OK'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("An error occurred: $e")),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isLoading = false);
+                        }
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.black,
                       foregroundColor: Colors.white,
@@ -260,21 +291,21 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     child: _isLoading
                         ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
-                          )
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
                         : const Text(
-                            'Sign In',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
+                      'Sign In',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 32),
 

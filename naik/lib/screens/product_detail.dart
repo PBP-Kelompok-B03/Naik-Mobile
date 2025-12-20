@@ -21,6 +21,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   String _userRole = '';
   int _userId = 0;
 
+  int quantity = 1;
+
+  int get totalPrice =>
+      widget.product.price.toInt() * quantity;
+
   @override
   void initState() {
     super.initState();
@@ -48,17 +53,6 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     return _userRole == 'buyer' && widget.product.stock > 0;
   }
 
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'N/A';
-    final months = [
-      'Jan','Feb','Mar','Apr','May','Jun',
-      'Jul','Aug','Sep','Oct','Nov','Dec'
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}, '
-        '${date.hour.toString().padLeft(2, '0')}:'
-        '${date.minute.toString().padLeft(2, '0')}';
-  }
-
   @override
   Widget build(BuildContext context) {
     final request = context.watch<CookieRequest>();
@@ -74,7 +68,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
 
-            // ================= IMAGE =================
+            /// IMAGE
             if (widget.product.getImageUrl().isNotEmpty)
               Image.network(
                 kIsWeb
@@ -98,28 +92,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
 
-                  // ================= AUCTION BADGE =================
-                  if (widget.product.isAuction)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6,
-                      ),
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        'AUCTION',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-
-                  // ================= TITLE =================
+                  /// TITLE
                   Text(
                     widget.product.title,
                     style: const TextStyle(
@@ -128,157 +101,104 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
-                  // ================= PRICE =================
+                  /// PRICE
                   Text(
                     'Rp ${widget.product.price.toStringAsFixed(0)}',
                     style: const TextStyle(
-                      fontSize: 28,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
                       color: Colors.green,
                     ),
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
-                  // ================= CATEGORY =================
+                  /// STOCK
+                  Text(
+                    'Stok tersedia: ${widget.product.stock}',
+                    style: TextStyle(
+                      color: widget.product.stock > 0
+                          ? Colors.green
+                          : Colors.red,
+                    ),
+                  ),
+
+                  const Divider(height: 32),
+
+                  /// JUMLAH
+                  const Text(
+                    "Jumlah",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+
                   Row(
                     children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: quantity > 1
+                            ? () => setState(() => quantity--)
+                            : null,
+                      ),
+
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.indigo.shade100,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        width: 50,
+                        alignment: Alignment.center,
                         child: Text(
-                          widget.product.category.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 12,
+                          quantity.toString(),
+                          style: const TextStyle(
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: Colors.indigo.shade700,
                           ),
                         ),
+                      ),
+
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: () {
+                          if (quantity < widget.product.stock) {
+                            setState(() => quantity++);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "Jumlah melebihi stok tersedia",
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 16),
 
-                  // ================= STOCK & SOLD =================
+                  /// TOTAL HARGA
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(Icons.inventory_2, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
+                      const Text(
+                        "Total",
+                        style: TextStyle(fontSize: 16),
+                      ),
                       Text(
-                        'Stock: ${widget.product.stock}',
-                        style: TextStyle(
-                          color: widget.product.stock > 0
-                              ? Colors.grey[600]
-                              : Colors.red,
+                        "Rp $totalPrice",
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.green,
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Icon(Icons.shopping_cart, size: 16, color: Colors.grey[600]),
-                      const SizedBox(width: 4),
-                      Text('Sold: ${widget.product.countSold}'),
                     ],
                   ),
 
-                  // ================= AUCTION INFO =================
-                  if (widget.product.isAuction) ...[
-                    const Divider(height: 32),
-                    const Text(
-                      'Auction Details',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    if (widget.product.auctionIncrement != null)
-                      Text(
-                        'Bid Increment: Rp ${widget.product.auctionIncrement!.toStringAsFixed(0)}',
-                      ),
-                    if (widget.product.auctionEndTime != null)
-                      Text(
-                        'Auction Ends: ${_formatDate(widget.product.auctionEndTime)}',
-                      ),
-                  ],
-
                   const SizedBox(height: 24),
 
-                  // ================= EDIT / DELETE =================
-                  if (_canEditOrDelete())
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Edit feature coming soon!'),
-                                ),
-                              );
-                            },
-                            icon: const Icon(Icons.edit),
-                            label: const Text('Edit'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (_) => AlertDialog(
-                                  title: const Text('Delete Product'),
-                                  content: Text(
-                                    'Delete "${widget.product.title}"?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, true),
-                                      child: const Text('Delete'),
-                                    ),
-                                  ],
-                                ),
-                              );
-
-                              if (confirm == true && context.mounted) {
-                                final response = await request.post(
-                                  "${AppConfig.baseUrl}/delete-flutter/${widget.product.id}/",
-                                  {},
-                                );
-
-                                if (response['status'] == 'success') {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const ProductEntryListPage(),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                            icon: const Icon(Icons.delete),
-                            label: const Text('Delete'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                  // ================= BUY NOW =================
-                  if (_canBuy()) ...[
-                    const SizedBox(height: 16),
+                  /// BUY BUTTON
+                  if (_canBuy())
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -288,25 +208,32 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             MaterialPageRoute(
                               builder: (_) => CheckoutPage(
                                 product: widget.product,
+                                quantity: quantity,
                               ),
                             ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
+                          backgroundColor: Colors.blue.shade700,
                           foregroundColor: Colors.white,
+                          disabledBackgroundColor: Colors.blue.shade700,
+                          disabledForegroundColor: Colors.white,
+                          elevation: 4,
                           padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: const Text(
-                          'BELI SEKARANG',
+                          "BELI SEKARANG",
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800, // 🔥 EXTRA BOLD
                             letterSpacing: 1,
+                            fontSize: 16,
                           ),
                         ),
                       ),
                     ),
-                  ],
                 ],
               ),
             ),
