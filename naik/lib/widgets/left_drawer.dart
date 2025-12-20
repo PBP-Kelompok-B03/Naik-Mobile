@@ -102,20 +102,21 @@ class _LeftDrawerState extends State<LeftDrawer> {
             },
           ),
 
-          _buildDrawerItem(
-            context,
-            icon: Icons.receipt_long_outlined,
-            title: 'Order List',
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const OrderListPage(),
-                ),
-              );
-            },
-          ),
-
+        // Only show "Order List" for buyers and admins
+          if (_userRole == 'buyer' || _userRole == 'admin')
+            _buildDrawerItem(
+              context,
+              icon: Icons.receipt_long_outlined,
+              title: 'Order List',
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const OrderListPage(),
+                  ),
+                );
+              },
+            ),
 
           // Only show "Add Product" for sellers and admins
           if (_userRole == 'seller' || _userRole == 'admin')
