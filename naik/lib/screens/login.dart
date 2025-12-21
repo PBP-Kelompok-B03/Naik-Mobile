@@ -7,8 +7,14 @@ import 'package:naik/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  runApp(const LoginApp());
+  runApp(
+    Provider<CookieRequest>(
+      create: (_) => CookieRequest(),
+      child: const LoginApp(),
+    ),
+  );
 }
+
 
 class LoginApp extends StatelessWidget {
   const LoginApp({super.key});

@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:naik/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:naik/checkout/screens/order_list_page.dart';
+// Import halaman Chat
+import 'package:naik/chat/screens/chat_list_page.dart';
 
 class LeftDrawer extends StatefulWidget {
   const LeftDrawer({super.key});
@@ -37,108 +39,109 @@ class _LeftDrawerState extends State<LeftDrawer> {
     final request = context.watch<CookieRequest>();
 
     return Drawer(
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: const Color(0xFF1A1A1A), // Dark theme background
       child: ListView(
-        padding: EdgeInsets.zero,
         children: [
-          // Header
-          DrawerHeader(
+          const DrawerHeader(
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.2),
-              border: Border(
-                bottom: BorderSide(
-                  color: Colors.grey[700]!,
-                  width: 1,
-                ),
-              ),
+              color: Color(0xFF0B0B0B), // Header darker background
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/images/logo.png',
-                  height: 50,
-                  fit: BoxFit.contain,
-                  alignment: Alignment.centerLeft,
-                ),
-                const SizedBox(height: 8),
                 Text(
-                  'Premium Footwear Collection',
+                  'Naik',
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[400],
-                    fontWeight: FontWeight.w300,
+                    fontSize: 30,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                Padding(padding: EdgeInsets.all(10)),
+                Text(
+                  "Platform Lelang Terpercaya",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.normal,
                   ),
                 ),
               ],
             ),
           ),
-
-          // Navigation Items
+          
+          // Menu Home
           _buildDrawerItem(
             context,
             icon: Icons.home_outlined,
-            title: 'Home',
+            title: 'Halaman Utama',
             onTap: () {
               Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => MyHomePage(),
+                  ));
+            },
+          ),
+
+          // Menu Tambah Produk (Contoh logika role, sesuaikan jika perlu)
+          _buildDrawerItem(
+            context,
+            icon: Icons.add_circle_outline,
+            title: 'Tambah Produk',
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProductFormPage(),
+                  ));
+            },
+          ),
+          
+          // Menu Daftar Produk
+          _buildDrawerItem(
+            context,
+            icon: Icons.list_alt,
+            title: 'Daftar Produk',
+            onTap: () {
+              Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const MyHomePage()),
+                MaterialPageRoute(builder: (context) => const ProductEntryListPage()),
               );
             },
           ),
 
+          // Menu Daftar Pesanan
           _buildDrawerItem(
             context,
             icon: Icons.shopping_bag_outlined,
-            title: 'Products',
+            title: 'Daftar Pesanan',
             onTap: () {
-              Navigator.pushReplacement(
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const OrderListPage()),
+              );
+            },
+          ),
+
+          // --- MENU CHAT (BARU) ---
+          _buildDrawerItem(
+            context,
+            icon: Icons.chat_bubble_outline,
+            title: 'Chat',
+            onTap: () {
+              Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const ProductEntryListPage(),
+                  builder: (context) => const ChatListPage(),
                 ),
               );
             },
           ),
+          // ------------------------
 
-        // Only show "Order List" for buyers and admins
-          if (_userRole == 'buyer' || _userRole == 'admin')
-            _buildDrawerItem(
-              context,
-              icon: Icons.receipt_long_outlined,
-              title: 'Order List',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const OrderListPage(),
-                  ),
-                );
-              },
-            ),
-
-          // Only show "Add Product" for sellers and admins
-          if (_userRole == 'seller' || _userRole == 'admin')
-            _buildDrawerItem(
-              context,
-              icon: Icons.add_box_outlined,
-              title: 'Add Product',
-              onTap: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const ProductFormPage()),
-                );
-              },
-            ),
-
-          // Divider
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Divider(color: Colors.grey[700], thickness: 1),
-          ),
-
-          // Logout
+          // Menu Logout
           _buildDrawerItem(
             context,
             icon: Icons.logout,
@@ -146,15 +149,7 @@ class _LeftDrawerState extends State<LeftDrawer> {
             isLogout: true,
             onTap: () async {
               final response = await request.logout(
-                "${AppConfig.baseUrl}/auth/logout/",
-              );
-
-              // Clear user data from SharedPreferences
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('username');
-              await prefs.remove('role');
-              await prefs.remove('user_id');
-
+                  "${AppConfig.baseUrl}/auth/logout/"); // Sesuaikan URL logout
               String message = response["message"];
               if (context.mounted) {
                 if (response['status']) {
