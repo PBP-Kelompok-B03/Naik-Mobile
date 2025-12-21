@@ -19,18 +19,41 @@ class _ChatListPageState extends State<ChatListPage> {
   bool loadingCreate = false;
 
   Future<List<ChatConversation>> fetchConversations(CookieRequest request) async {
-    final response = await request.get('$baseUrl/chat/api/list/');
-    List<ChatConversation> listChat = [];
-    if (response != null && response is Map && response['conversations'] != null) {
-      for (var d in response['conversations']) {
-        try {
-          listChat.add(ChatConversation.fromJson(Map<String, dynamic>.from(d)));
-        } catch (e) {
-          debugPrint("Failed parsing conversation: $e");
+    try {
+      print('Fetching conversations from: $baseUrl/chat/api/list/');
+      print('Request logged in: ${request.loggedIn}');
+
+      if (!request.loggedIn) {
+        print('User not logged in!');
+        throw Exception('User not authenticated');
+      }
+
+      final response = await request.get('$baseUrl/chat/api/list/');
+      print('Raw response: $response');
+      print('Response type: ${response.runtimeType}');
+
+      List<ChatConversation> listChat = [];
+      if (response != null && response is Map && response['conversations'] != null) {
+        print('Response is valid Map with conversations');
+        for (var d in response['conversations']) {
+          try {
+            listChat.add(ChatConversation.fromJson(Map<String, dynamic>.from(d)));
+          } catch (e) {
+            debugPrint("Failed parsing conversation: $e");
+            debugPrint("Conversation data: $d");
+          }
+        }
+      } else {
+        print('Response is not valid Map or missing conversations key');
+        if (response is String) {
+          print('Response is String (HTML error?): ${response.substring(0, 200)}');
         }
       }
+      return listChat;
+    } catch (e) {
+      print('Error in fetchConversations: $e');
+      rethrow;
     }
-    return listChat;
   }
 
   Future<void> createConversationDialog(CookieRequest request) async {

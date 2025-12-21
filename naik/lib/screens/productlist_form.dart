@@ -10,7 +10,12 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 class ProductFormPage extends StatefulWidget {
-  const ProductFormPage({super.key});
+  final bool isAuctionEnabled;
+  
+  const ProductFormPage({
+    super.key,
+    this.isAuctionEnabled = false,
+  });
 
   @override
   State<ProductFormPage> createState() => _ProductFormPageState();
@@ -26,6 +31,20 @@ class _ProductFormPageState extends State<ProductFormPage> {
   bool _isLoading = false;
   XFile? _imageFile;
   final ImagePicker _picker = ImagePicker();
+
+  // Auction fields
+  bool _isAuction = false;
+  int _auctionIncrement = 1000;
+  int _auctionDuration = 24;
+
+  @override
+  void initState() {
+    super.initState();
+    _isAuction = widget.isAuctionEnabled;
+    if (_isAuction) {
+      _stock = 1;
+    }
+  }
 
   final List<String> _categories = [
     "Men's Shoes",
@@ -165,13 +184,14 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     const SizedBox(height: 24),
 
                     // Stock
-                    _buildLabel('STOCK'),
+                    _buildLabel(_isAuction ? 'STOCK (DISABLED FOR AUCTIONS)' : 'STOCK'),
                     const SizedBox(height: 8),
                     TextFormField(
-                      decoration: _buildInputDecoration('Enter stock quantity'),
+                      decoration: _buildInputDecoration(_isAuction ? 'Stock set to 1 for auctions' : 'Enter stock quantity'),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      initialValue: '1',
+                      initialValue: _isAuction ? '1' : '1',
+                      enabled: !_isAuction,
                       onChanged: (String value) {
                         setState(() {
                           _stock = int.tryParse(value) ?? 1;
@@ -186,6 +206,111 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         }
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Auction Option
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.blue[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.blue[200]!),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _isAuction,
+                                onChanged: (bool? value) {
+                                  setState(() {
+                                    _isAuction = value ?? false;
+                                    if (_isAuction) {
+                                      _stock = 1;
+                                    }
+                                  });
+                                },
+                                activeColor: Colors.blue[700],
+                              ),
+                              const Text(
+                                'Sell as Auction',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (_isAuction) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              'Note: Product price will be used as starting bid price',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.blue[700],
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            // Auction Increment
+                            _buildLabel('MINIMUM BID INCREMENT (IDR)'),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              decoration: _buildInputDecoration('e.g., 1000'),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              initialValue: '1000',
+                              onChanged: (String value) {
+                                setState(() {
+                                  _auctionIncrement = int.tryParse(value) ?? 1000;
+                                });
+                              },
+                              validator: (String? value) {
+                                if (_isAuction && (value == null || value.isEmpty)) {
+                                  return "Auction increment cannot be empty!";
+                                }
+                                if (_isAuction && value != null) {
+                                  final parsed = int.tryParse(value);
+                                  if (parsed == null || parsed <= 0) {
+                                    return "Auction increment must be a valid positive number!";
+                                  }
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 16),
+                            // Auction Duration
+                            _buildLabel('AUCTION DURATION (HOURS)'),
+                            const SizedBox(height: 8),
+                            TextFormField(
+                              decoration: _buildInputDecoration('e.g., 24'),
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                              initialValue: '24',
+                              onChanged: (String value) {
+                                setState(() {
+                                  _auctionDuration = int.tryParse(value) ?? 24;
+                                });
+                              },
+                              validator: (String? value) {
+                                if (_isAuction && (value == null || value.isEmpty)) {
+                                  return "Auction duration cannot be empty!";
+                                }
+                                if (_isAuction && value != null) {
+                                  final parsed = int.tryParse(value);
+                                  if (parsed == null || parsed <= 0) {
+                                    return "Auction duration must be a valid positive number!";
+                                  }
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 24),
 
@@ -317,8 +442,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
                                             "price": _price,
                                             "category": _category,
                                             "stock": _stock,
+                                            "is_auction": _isAuction,
+                                            if (_isAuction) ...{
+                                              "auction_increment": _auctionIncrement,
+                                              "auction_duration": _auctionDuration,
+                                            },
                                           }),
                                         );
+
+                                        print("Response received: $response");
 
                                         if (context.mounted) {
                                           if (response['status'] == 'success') {
@@ -361,6 +493,34 @@ class _ProductFormPageState extends State<ProductFormPage> {
                                               ),
                                             );
                                           }
+                                        }
+                                      } catch (e) {
+                                        print("Error creating product: $e");
+                                        if (context.mounted) {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text(
+                                                'Error',
+                                                style: TextStyle(fontWeight: FontWeight.bold),
+                                              ),
+                                              content: Text(
+                                                'Failed to create product: $e',
+                                              ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.circular(12),
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () => Navigator.pop(context),
+                                                  style: TextButton.styleFrom(
+                                                    foregroundColor: Colors.black,
+                                                  ),
+                                                  child: const Text('OK'),
+                                                ),
+                                              ],
+                                            ),
+                                          );
                                         }
                                       } finally {
                                         if (mounted) {

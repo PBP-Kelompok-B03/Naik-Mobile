@@ -4,6 +4,7 @@ import 'package:naik/widgets/left_drawer.dart';
 import 'package:naik/models/product_entry.dart';
 import 'package:naik/screens/product_entry_list.dart';
 import 'package:naik/screens/product_detail.dart';
+import 'package:naik/screens/productlist_form.dart';
 import 'package:naik/config/app_config.dart';
 import 'package:provider/provider.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
