@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:naik/models/product_entry.dart';
@@ -22,6 +24,13 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   int _userId = 0;
 
   int quantity = 1;
+  
+  // Track edit mode for comments and replies
+  Map<String, bool> _editingComments = {};
+  Map<String, TextEditingController> _commentControllers = {};
+  Map<String, int> _editingCommentRatings = {}; // Add this to track rating edits
+  Map<String, bool> _editingReplies = {};
+  Map<String, TextEditingController> _replyControllers = {};
 
   int get totalPrice =>
       widget.product.price.toInt() * quantity;
@@ -51,6 +60,172 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
 
   bool _canBuy() {
     return _userRole == 'buyer' && widget.product.stock > 0;
+  }
+
+  // Helper methods to check ownership
+  bool _isCommentOwner(String authorId) {
+    int? parsedId = int.tryParse(authorId);
+    return parsedId != null && parsedId == _userId;
+  }
+
+  bool _isReplyOwner(String authorId) {
+    int? parsedId = int.tryParse(authorId);
+    return parsedId != null && parsedId == _userId;
+  }
+
+  @override
+  void dispose() {
+    // Dispose all TextEditingControllers
+    for (var controller in _commentControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _replyControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _editComment(String commentId, String newContent, int newRating) async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.postJson(
+        '${AppConfig.baseUrl}/comments/api/flutter/edit/$commentId/',
+        jsonEncode( {
+          'content': newContent,
+          'rating': newRating,
+        }),
+      );
+      
+      if (response['status'] == true) {
+        // Update the comment data locally
+        for (var comment in widget.product.comments ?? []) {
+          if (comment.commentId == commentId) {
+            comment.commentContent = newContent;
+            comment.commentRating = newRating;
+            break;
+          }
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Komentar berhasil diperbarui')),
+        );
+        setState(() {
+          _editingComments[commentId] = false;
+          _commentControllers[commentId]?.dispose();
+          _commentControllers.remove(commentId);
+          _editingCommentRatings.remove(commentId);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Gagal mengupdate komentar')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteComment(String commentId) async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.postJson(
+        '${AppConfig.baseUrl}/comments/api/flutter/delete/$commentId/',
+        jsonEncode( {},)
+      );
+      
+      if (response['status'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Komentar berhasil dihapus')),
+        );
+        setState(() {
+          widget.product.comments?.removeWhere((c) => c.commentId == commentId);
+          _commentControllers[commentId]?.dispose();
+          _commentControllers.remove(commentId);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Gagal menghapus komentar')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _editReply(String replyId, String newContent) async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.postJson(
+        '${AppConfig.baseUrl}/comments/api/flutter/reply/edit/$replyId/',
+        jsonEncode( {
+          'content': newContent,
+        }),
+      );
+      
+      if (response['status'] == true) {
+        // Update the reply data locally
+        for (var comment in widget.product.comments ?? []) {
+          for (var reply in comment.replies ?? []) {
+            if (reply.replyId == replyId) {
+              reply.replyContent = newContent;
+              break;
+            }
+          }
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Balasan berhasil diperbarui')),
+        );
+        setState(() {
+          _editingReplies[replyId] = false;
+          _replyControllers[replyId]?.dispose();
+          _replyControllers.remove(replyId);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Gagal mengupdate balasan')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _deleteReply(String replyId) async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.postJson(
+        '${AppConfig.baseUrl}/comments/api/flutter/reply/delete/$replyId/',
+        jsonEncode( {} ),
+      );
+      
+      if (response['status'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Balasan berhasil dihapus')),
+        );
+        setState(() {
+          for (var comment in widget.product.comments ?? []) {
+            comment.replies?.removeWhere((r) => r.replyId == replyId);
+          }
+          _replyControllers[replyId]?.dispose();
+          _replyControllers.remove(replyId);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Gagal menghapus balasan')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
   }
 
   @override
@@ -280,15 +455,27 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
-                                      child: Column(
+                                        child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
-                                          Text(
-                                            comment.commentAuthorUsername,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
+                                          Row(
+                                            children: [
+                                              Text(
+                                                comment.commentAuthorUsername,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                '(${comment.commentAuthorRole})',
+                                                style: TextStyle(
+                                                  color: Colors.grey[600],
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
@@ -320,10 +507,134 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 const SizedBox(height: 8),
 
                                 /// COMMENT CONTENT
-                                Text(
-                                  comment.commentContent,
-                                  style: const TextStyle(fontSize: 14),
-                                ),
+                                if (_editingComments[comment.commentId] == true)
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      TextField(
+                                        controller: _commentControllers[comment.commentId],
+                                        maxLines: 3,
+                                        decoration: InputDecoration(
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          hintText: 'Edit komentar...',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      
+                                      /// RATING EDITOR
+                                      const Text(
+                                        'Rating',
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: List.generate(
+                                          5,
+                                          (starIndex) => GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                _editingCommentRatings[comment.commentId] = starIndex + 1;
+                                              });
+                                            },
+                                            child: Icon(
+                                              starIndex < (_editingCommentRatings[comment.commentId] ?? comment.commentRating)
+                                                  ? Icons.star
+                                                  : Icons.star_outline,
+                                              size: 28,
+                                              color: Colors.amber,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.end,
+                                        children: [
+                                          TextButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                _editingComments[comment.commentId] = false;
+                                                _commentControllers[comment.commentId]?.dispose();
+                                                _commentControllers.remove(comment.commentId);
+                                                _editingCommentRatings.remove(comment.commentId);
+                                              });
+                                            },
+                                            child: const Text('Batal'),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              final newContent = _commentControllers[comment.commentId]?.text ?? '';
+                                              final newRating = _editingCommentRatings[comment.commentId] ?? comment.commentRating;
+                                              if (newContent.isNotEmpty) {
+                                                _editComment(comment.commentId, newContent, newRating);
+                                              }
+                                            },
+                                            child: const Text('Kirim'),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  )
+                                else
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        comment.commentContent,
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                      if (_isCommentOwner(comment.commentAuthorId))
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8),
+                                          child: Row(
+                                            children: [
+                                              TextButton.icon(
+                                                onPressed: () {
+                                                  _commentControllers[comment.commentId] = 
+                                                    TextEditingController(text: comment.commentContent);
+                                                  _editingCommentRatings[comment.commentId] = comment.commentRating;
+                                                  setState(() {
+                                                    _editingComments[comment.commentId] = true;
+                                                  });
+                                                },
+                                                icon: const Icon(Icons.edit, size: 16),
+                                                label: const Text('Edit'),
+                                              ),
+                                              TextButton.icon(
+                                                onPressed: () {
+                                                  showDialog(
+                                                    context: context,
+                                                    builder: (ctx) => AlertDialog(
+                                                      title: const Text('Hapus Komentar'),
+                                                      content: const Text('Yakin ingin menghapus komentar ini?'),
+                                                      actions: [
+                                                        TextButton(
+                                                          onPressed: () => Navigator.pop(ctx),
+                                                          child: const Text('Batal'),
+                                                        ),
+                                                        TextButton(
+                                                          onPressed: () {
+                                                            Navigator.pop(ctx);
+                                                            _deleteComment(comment.commentId);
+                                                          },
+                                                          child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                                icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                                                label: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                    ],
+                                  ),
 
                                 /// REPLIES SECTION
                                 if (comment.replies != null && comment.replies!.isNotEmpty) ...[
@@ -352,27 +663,146 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                                 Row(
                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: [
+                                                  Row(
+                                                    children: [
                                                     Text(
                                                       reply.replyAuthorUsername,
                                                       style: const TextStyle(
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 12,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 12,
                                                       ),
                                                     ),
+                                                    const SizedBox(width: 8),
                                                     Text(
-                                                      _formatDate(reply.replyCreatedAt),
+                                                      '(${reply.replyAuthorRole})',
                                                       style: TextStyle(
-                                                        color: Colors.grey[600],
-                                                        fontSize: 11,
+                                                      color: Colors.grey[600],
+                                                      fontSize: 11,
                                                       ),
                                                     ),
+                                                    ],
+                                                  ),
+                                                  Text(
+                                                    _formatDate(reply.replyCreatedAt),
+                                                    style: TextStyle(
+                                                    color: Colors.grey[600],
+                                                    fontSize: 11,
+                                                    ),
+                                                  ),
                                                   ],
                                                 ),
                                                 const SizedBox(height: 4),
-                                                Text(
-                                                  reply.replyContent,
-                                                  style: const TextStyle(fontSize: 12),
-                                                ),
+                                                if (_editingReplies[reply.replyId] == true)
+                                                  Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      TextField(
+                                                        controller: _replyControllers[reply.replyId],
+                                                        maxLines: 2,
+                                                        decoration: InputDecoration(
+                                                          border: OutlineInputBorder(
+                                                            borderRadius: BorderRadius.circular(6),
+                                                          ),
+                                                          hintText: 'Edit balasan...',
+                                                          isDense: true,
+                                                          contentPadding: const EdgeInsets.all(8),
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 6),
+                                                      Row(
+                                                        mainAxisAlignment: MainAxisAlignment.end,
+                                                        children: [
+                                                          SizedBox(
+                                                            height: 28,
+                                                            child: TextButton(
+                                                              onPressed: () {
+                                                                setState(() {
+                                                                  _editingReplies[reply.replyId] = false;
+                                                                  _replyControllers[reply.replyId]?.dispose();
+                                                                  _replyControllers.remove(reply.replyId);
+                                                                });
+                                                              },
+                                                              child: const Text('Batal', style: TextStyle(fontSize: 12)),
+                                                            ),
+                                                          ),
+                                                          const SizedBox(width: 6),
+                                                          SizedBox(
+                                                            height: 28,
+                                                            child: ElevatedButton(
+                                                              onPressed: () {
+                                                                final newContent = _replyControllers[reply.replyId]?.text ?? '';
+                                                                if (newContent.isNotEmpty) {
+                                                                  _editReply(reply.replyId, newContent);
+                                                                }
+                                                              },
+                                                              child: const Text('Kirim', style: TextStyle(fontSize: 12)),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  )
+                                                else
+                                                  Column(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      Text(
+                                                        reply.replyContent,
+                                                        style: const TextStyle(fontSize: 12),
+                                                      ),
+                                                      if (_isReplyOwner(reply.replyAuthorId))
+                                                        Padding(
+                                                          padding: const EdgeInsets.only(top: 6),
+                                                          child: Row(
+                                                            children: [
+                                                              SizedBox(
+                                                                height: 28,
+                                                                child: TextButton.icon(
+                                                                  onPressed: () {
+                                                                    _replyControllers[reply.replyId] = 
+                                                                      TextEditingController(text: reply.replyContent);
+                                                                    setState(() {
+                                                                      _editingReplies[reply.replyId] = true;
+                                                                    });
+                                                                  },
+                                                                  icon: const Icon(Icons.edit, size: 14),
+                                                                  label: const Text('Edit', style: TextStyle(fontSize: 11)),
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                height: 28,
+                                                                child: TextButton.icon(
+                                                                  onPressed: () {
+                                                                    showDialog(
+                                                                      context: context,
+                                                                      builder: (ctx) => AlertDialog(
+                                                                        title: const Text('Hapus Balasan'),
+                                                                        content: const Text('Yakin ingin menghapus balasan ini?'),
+                                                                        actions: [
+                                                                          TextButton(
+                                                                            onPressed: () => Navigator.pop(ctx),
+                                                                            child: const Text('Batal'),
+                                                                          ),
+                                                                          TextButton(
+                                                                            onPressed: () {
+                                                                              Navigator.pop(ctx);
+                                                                              _deleteReply(reply.replyId);
+                                                                            },
+                                                                            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                                                          ),
+                                                                        ],
+                                                                      ),
+                                                                    );
+                                                                  },
+                                                                  icon: const Icon(Icons.delete, size: 14, color: Colors.red),
+                                                                  label: const Text('Hapus', style: TextStyle(fontSize: 11, color: Colors.red)),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                    ],
+                                                  ),
                                               ],
                                             ),
                                           );
@@ -405,9 +835,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       if (difference.inHours < 1) {
         return 'Baru saja';
       }
-      return '${difference.inHours}h yang lalu';
+      return '${difference.inHours}jam yang lalu';
     } else if (difference.inDays < 7) {
-      return '${difference.inDays}d yang lalu';
+      return '${difference.inDays}hari yang lalu';
     } else {
       return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
     }
