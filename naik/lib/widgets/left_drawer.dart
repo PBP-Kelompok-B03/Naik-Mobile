@@ -10,6 +10,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:naik/checkout/screens/order_list_page.dart';
 // Import halaman Chat
 import 'package:naik/chat/screens/chat_list_page.dart';
+// Import halaman Auction
+import 'package:naik/auction/screens/auction_list_page.dart';
 
 class LeftDrawer extends StatefulWidget {
   const LeftDrawer({super.key});
@@ -123,6 +125,22 @@ class _LeftDrawerState extends State<LeftDrawer> {
                 );
               },
             ),
+
+          // --- MENU AUCTION (BARU) ---
+          _buildDrawerItem(
+            context,
+            icon: Icons.gavel,  // Icon palu lelang
+            title: 'Auction',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const AuctionListPage(),
+                ),
+              );
+            },
+          ),
+          // ------------------------
 
           // --- MENU CHAT (BARU) ---
           _buildDrawerItem(
