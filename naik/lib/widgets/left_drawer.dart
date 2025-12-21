@@ -42,24 +42,21 @@ class _LeftDrawerState extends State<LeftDrawer> {
       backgroundColor: const Color(0xFF1A1A1A), // Dark theme background
       child: ListView(
         children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
+          DrawerHeader(
+            decoration: const BoxDecoration(
               color: Color(0xFF0B0B0B), // Header darker background
             ),
             child: Column(
               children: [
-                Text(
-                  'Naik',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                Image.asset(
+                  'assets/images/logo.png',
+                  height: 50,
+                  fit: BoxFit.contain,
+                  alignment: Alignment.center,
                 ),
-                Padding(padding: EdgeInsets.all(10)),
-                Text(
-                  "Platform Lelang Terpercaya",
+                const Padding(padding: EdgeInsets.all(10)),
+                const Text(
+                  "Platform Jual, Beli, dan Lelang Sepatu Terpercaya",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -86,18 +83,19 @@ class _LeftDrawerState extends State<LeftDrawer> {
           ),
 
           // Menu Tambah Produk (Contoh logika role, sesuaikan jika perlu)
-          _buildDrawerItem(
-            context,
-            icon: Icons.add_circle_outline,
-            title: 'Tambah Produk',
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const ProductFormPage(),
-                  ));
-            },
-          ),
+          if (_userRole == 'seller' || _userRole == 'admin')
+            _buildDrawerItem(
+              context,
+              icon: Icons.add_circle_outline,
+              title: 'Tambah Produk',
+              onTap: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProductFormPage(),
+                    ));
+              },
+            ),
           
           // Menu Daftar Produk
           _buildDrawerItem(
@@ -113,17 +111,18 @@ class _LeftDrawerState extends State<LeftDrawer> {
           ),
 
           // Menu Daftar Pesanan
-          _buildDrawerItem(
-            context,
-            icon: Icons.shopping_bag_outlined,
-            title: 'Daftar Pesanan',
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const OrderListPage()),
-              );
-            },
-          ),
+          if (_userRole == 'buyer' || _userRole == 'admin')
+            _buildDrawerItem(
+              context,
+              icon: Icons.shopping_bag_outlined,
+              title: 'Daftar Pesanan',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const OrderListPage()),
+                );
+              },
+            ),
 
           // --- MENU CHAT (BARU) ---
           _buildDrawerItem(

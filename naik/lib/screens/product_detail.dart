@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:naik/models/product_entry.dart';
+import 'package:naik/reviews/comment_entry.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:pbp_django_auth/pbp_django_auth.dart';
 import 'package:provider/provider.dart';
@@ -29,6 +30,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Map<String, bool> _editingComments = {};
   Map<String, TextEditingController> _commentControllers = {};
   Map<String, int> _editingCommentRatings = {}; // Add this to track rating edits
+  Map<String, bool> _replyingToComments = {}; // Track which comments are in reply mode
+  Map<String, TextEditingController> _replyToCommentControllers = {}; // Controllers for reply inputs
   Map<String, bool> _editingReplies = {};
   Map<String, TextEditingController> _replyControllers = {};
 
@@ -77,6 +80,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   void dispose() {
     // Dispose all TextEditingControllers
     for (var controller in _commentControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _replyToCommentControllers.values) {
       controller.dispose();
     }
     for (var controller in _replyControllers.values) {
@@ -219,6 +225,57 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(response['message'] ?? 'Gagal menghapus balasan')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
+
+  Future<void> _replyToComment(String commentId, String replyContent) async {
+    final request = context.read<CookieRequest>();
+    try {
+      final response = await request.postJson(
+        '${AppConfig.baseUrl}/comments/api/flutter/reply/$commentId/',
+        jsonEncode({
+          'content': replyContent,
+        }),
+      );
+      
+      if (response['status'] == true) {
+        // Update the reply data locally
+        for (var comment in widget.product.comments ?? []) {
+          if (comment.commentId == commentId) {
+            // Create new Reply object from response
+            final newReply = Reply(
+              replyId: response['reply_id'] ?? '',
+              replyContent: replyContent,
+              replyAuthorId: response['reply_author_id']?.toString() ?? _userId.toString(),
+              replyAuthorUsername: response['reply_author_username'] ?? 'Unknown',
+              replyAuthorRole: response['reply_author_role'] ?? 'buyer',
+              replyCreatedAt: DateTime.now(),
+            );
+            
+            // Add reply to comment's replies list
+            comment.replies ??= [];
+            comment.replies!.add(newReply);
+            break;
+          }
+        }
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Balasan berhasil dikirim')),
+        );
+        setState(() {
+          _replyingToComments[commentId] = false;
+          _replyToCommentControllers[commentId]?.dispose();
+          _replyToCommentControllers.remove(commentId);
+        });
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(response['message'] ?? 'Gagal mengirim balasan')),
         );
       }
     } catch (e) {
@@ -591,44 +648,136 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                         Padding(
                                           padding: const EdgeInsets.only(top: 8),
                                           child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              TextButton.icon(
-                                                onPressed: () {
-                                                  _commentControllers[comment.commentId] = 
-                                                    TextEditingController(text: comment.commentContent);
-                                                  _editingCommentRatings[comment.commentId] = comment.commentRating;
-                                                  setState(() {
-                                                    _editingComments[comment.commentId] = true;
-                                                  });
-                                                },
-                                                icon: const Icon(Icons.edit, size: 16),
-                                                label: const Text('Edit'),
+                                              Row(
+                                                children: [
+                                                  TextButton.icon(
+                                                    onPressed: () {
+                                                      _commentControllers[comment.commentId] = 
+                                                        TextEditingController(text: comment.commentContent);
+                                                      _editingCommentRatings[comment.commentId] = comment.commentRating;
+                                                      setState(() {
+                                                        _editingComments[comment.commentId] = true;
+                                                      });
+                                                    },
+                                                    icon: const Icon(Icons.edit, size: 16),
+                                                    label: const Text('Edit'),
+                                                  ),
+                                                  TextButton.icon(
+                                                    onPressed: () {
+                                                      showDialog(
+                                                        context: context,
+                                                        builder: (ctx) => AlertDialog(
+                                                          title: const Text('Hapus Komentar'),
+                                                          content: const Text('Yakin ingin menghapus komentar ini?'),
+                                                          actions: [
+                                                            TextButton(
+                                                              onPressed: () => Navigator.pop(ctx),
+                                                              child: const Text('Batal'),
+                                                            ),
+                                                            TextButton(
+                                                              onPressed: () {
+                                                                Navigator.pop(ctx);
+                                                                _deleteComment(comment.commentId);
+                                                              },
+                                                              child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      );
+                                                    },
+                                                    icon: const Icon(Icons.delete, size: 16, color: Colors.red),
+                                                    label: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                                  ),
+                                                ],
                                               ),
                                               TextButton.icon(
                                                 onPressed: () {
-                                                  showDialog(
-                                                    context: context,
-                                                    builder: (ctx) => AlertDialog(
-                                                      title: const Text('Hapus Komentar'),
-                                                      content: const Text('Yakin ingin menghapus komentar ini?'),
-                                                      actions: [
-                                                        TextButton(
-                                                          onPressed: () => Navigator.pop(ctx),
-                                                          child: const Text('Batal'),
-                                                        ),
-                                                        TextButton(
-                                                          onPressed: () {
-                                                            Navigator.pop(ctx);
-                                                            _deleteComment(comment.commentId);
-                                                          },
-                                                          child: const Text('Hapus', style: TextStyle(color: Colors.red)),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
+                                                  setState(() {
+                                                    _replyingToComments[comment.commentId] = !(_replyingToComments[comment.commentId] ?? false);
+                                                    if (_replyingToComments[comment.commentId] == false) {
+                                                      _replyToCommentControllers[comment.commentId]?.dispose();
+                                                      _replyToCommentControllers.remove(comment.commentId);
+                                                    }
+                                                  });
                                                 },
-                                                icon: const Icon(Icons.delete, size: 16, color: Colors.red),
-                                                label: const Text('Hapus', style: TextStyle(color: Colors.red)),
+                                                icon: const Icon(Icons.reply, size: 16),
+                                                label: const Text('Balas'),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      else
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 8),
+                                          child: Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              const SizedBox.shrink(),
+                                              TextButton.icon(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _replyingToComments[comment.commentId] = !(_replyingToComments[comment.commentId] ?? false);
+                                                    if (_replyingToComments[comment.commentId] == false) {
+                                                      _replyToCommentControllers[comment.commentId]?.dispose();
+                                                      _replyToCommentControllers.remove(comment.commentId);
+                                                    }
+                                                  });
+                                                },
+                                                icon: const Icon(Icons.reply, size: 16),
+                                                label: const Text('Balas'),
+                                              ),
+                                            ],
+                                          )
+                                        ),
+                                      /// REPLY INPUT
+                                      if (_replyingToComments[comment.commentId] == true)
+                                        Padding(
+                                          padding: const EdgeInsets.only(top: 12),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              TextField(
+                                                controller: _replyToCommentControllers.putIfAbsent(
+                                                  comment.commentId,
+                                                  () => TextEditingController(),
+                                                ),
+                                                maxLines: 2,
+                                                decoration: InputDecoration(
+                                                  border: OutlineInputBorder(
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  hintText: 'Balas Komentar ini',
+                                                  isDense: true,
+                                                  contentPadding: const EdgeInsets.all(8),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.end,
+                                                children: [
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        _replyingToComments[comment.commentId] = false;
+                                                        _replyToCommentControllers[comment.commentId]?.dispose();
+                                                        _replyToCommentControllers.remove(comment.commentId);
+                                                      });
+                                                    },
+                                                    child: const Text('Batal'),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  ElevatedButton(
+                                                    onPressed: () {
+                                                      final replyContent = _replyToCommentControllers[comment.commentId]?.text ?? '';
+                                                      if (replyContent.isNotEmpty) {
+                                                        _replyToComment(comment.commentId, replyContent);
+                                                      }
+                                                    },
+                                                    child: const Text('Kirim'),
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
