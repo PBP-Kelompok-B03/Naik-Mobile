@@ -62,7 +62,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   }
 
   bool _canBuy() {
-    return _userRole == 'buyer' && widget.product.stock > 0;
+    return _userRole == 'buyer' && widget.product.stock > 0 && !widget.product.isAuction;
   }
 
   // Helper methods to check ownership

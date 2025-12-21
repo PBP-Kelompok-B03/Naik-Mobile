@@ -22,7 +22,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final List<Map<String, String>> _roles = [
     {'value': 'buyer', 'label': 'Buyer'},
     {'value': 'seller', 'label': 'Seller'},
-    {'value': 'admin', 'label': 'Admin'},
   ];
 
   @override
