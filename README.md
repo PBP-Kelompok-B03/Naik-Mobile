@@ -105,7 +105,7 @@ Pihak internal Naik yang mengontrol sistem dan keamanan platform.
 3. Setelan pada `settings.py`:
 
    ```python
-   CSRF_TRUSTED_ORIGINS = ["http://localhost", "http://127.0.0.1", "http://10.0.2.2"]
+   CSRF_TRUSTED_ORIGINS = ["http://localhost", "https://raymundo-rafaelito-naik.pbp.cs.ui.ac.id", "http://10.0.2.2"]
    ```
 4. Membuat endpoint JSON
 

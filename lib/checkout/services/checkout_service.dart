@@ -13,7 +13,7 @@ class CheckoutService {
     required String note,
   }) async {
     final response = await request.postJson(
-      "http://127.0.0.1:8000/checkout/api/checkout/",
+      "https://raymundo-rafaelito-naik.pbp.cs.ui.ac.id/checkout/api/checkout/",
       {
         "product_id": productId,
         "quantity": quantity,

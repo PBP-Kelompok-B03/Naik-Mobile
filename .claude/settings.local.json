@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(flutter clean:*)",
+      "Bash(flutter run:*)",
+      "Bash(python manage.py shell:*)",
+      "Bash(envScriptsactivate)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(python manage.py:*)",
+      "Bash(. env/Scripts/activate)",
+      "Bash(flutter analyze:*)",
+      "Bash(git pull:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
