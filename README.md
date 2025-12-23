@@ -138,4 +138,4 @@ Pihak internal Naik yang mengontrol sistem dan keamanan platform.
 [https://www.figma.com/team_invite/redeem/SqRdQdOKUpWhPSU0bTmWad](https://www.figma.com/team_invite/redeem/SqRdQdOKUpWhPSU0bTmWad)
 
 ---
-Tes Trigger Bitrise
+Tes Trigger Bitrise lagi
