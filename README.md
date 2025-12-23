@@ -6,7 +6,7 @@
 ## 1. Nama Anggota Kelompok
 
 * **Bryan Christopher Kurniadi** – 2406346011
-* **Harish Azka Firdaus** – 2406435805
+* **Naik** – 2406435805
 * **Hammam Muhammad Mubarak** – 2406401350
 * **Jessevan Gerard Vito Uisan** – 2406495496
 * **Raymundo Rafaelito** – 2406404642
@@ -21,7 +21,7 @@
 
 Fitur ini memungkinkan pengguna membaca dan menulis ulasan jujur pada produk. Membantu calon pembeli mengambil keputusan berdasarkan pengalaman pengguna lain.
 
-### b. Filter Produk – *Harish Azka Firdaus*
+### b. Filter Produk – *Naik*
 
 Memudahkan pengguna menyaring produk berdasarkan kategori, harga, merek, hingga jenis olahraga. Cocok untuk mencari produk terbaik sesuai kebutuhan.
 
