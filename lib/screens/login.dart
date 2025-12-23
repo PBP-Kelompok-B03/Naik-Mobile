@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:naik/screens/register.dart';
 import 'package:naik/config/app_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 void main() {
   runApp(
@@ -165,13 +166,14 @@ class _LoginPageState extends State<LoginPage> {
                         if (username == 'admin' && password == 'admin') {
 
                           // **MODIFIKASI KRUSIAL:** Lakukan login ke Django API untuk mendapatkan cookie sesi
-                          final adminLoginResponse = await request.login(
+                          final adminLoginResponse = await request.postJson(
                             "${AppConfig.baseUrl}/auth/login/",
-                            {'username': 'admin', 'password': 'admin'},
+                            jsonEncode({'username': 'admin', 'password': 'admin'}),
                           );
 
                           // Periksa apakah login Django berhasil
-                          if (request.loggedIn) {
+                          if (adminLoginResponse['status'] == true) {
+                            request.loggedIn = true;
                             // Save admin credentials
                             final prefs = await SharedPreferences.getInstance();
                             await prefs.setString('username', 'admin');
@@ -214,12 +216,13 @@ class _LoginPageState extends State<LoginPage> {
                         }
 
                         // Regular login via API
-                        final response = await request.login(
+                        final response = await request.postJson(
                           "${AppConfig.baseUrl}/auth/login/",
-                          {'username': username, 'password': password},
+                          jsonEncode({'username': username, 'password': password}),
                         );
 
-                        if (request.loggedIn) {
+                        if (response['status'] == true) {
+                          request.loggedIn = true;
                           String message = response['message'];
                           String uname = response['username'];
                           String role = response['role'] ?? 'buyer';
